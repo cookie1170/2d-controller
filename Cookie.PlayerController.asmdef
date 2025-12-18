@@ -1,0 +1,23 @@
+{
+    "name": "Cookie.PlayerController",
+    "rootNamespace": "Cookie.PlayerController",
+    "references": [
+        "CookieUtils.Debugging",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.cookie.cookieutils",
+            "expression": "0.6.0",
+            "define": "COOKIE_UTILS"
+        }
+    ],
+    "noEngineReferences": false
+}
