@@ -289,8 +289,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Cookie.PlayerController::Cookie.PlayerController.SidescrollerController
   rigidBody: {fileID: 518598254}
-  moveAction: {fileID: 1181454385}
-  jumpAction: {fileID: 768602258}
+  moveAction: {fileID: 928122790}
+  jumpAction: {fileID: 1964710827}
   coyoteTime: 0.15
   jumpBuffer: 0.2
   jumpHeight: 3
@@ -303,8 +303,8 @@ MonoBehaviour:
   stopTime: 0.2
   turnaroundMult: 1.5
   airAccelMult: 0.8
-  groundedThreshold: 0.4
-  ceilingThreshold: 0.8
+  groundedAngle: 70
+  ceilingAngle: 40
   gravitySlipAngle: 60
 --- !u!50 &518598254
 Rigidbody2D:
@@ -967,21 +967,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &768602258
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
-  m_Name: Player/Jump
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
-  m_Asset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  m_ActionId: f1ba0d36-48eb-4cd5-b651-1c94a6531f70
---- !u!114 &1181454385
+--- !u!114 &928122790
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -993,8 +979,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
   m_Name: Player/Move
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
-  m_Asset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  m_ActionId: 351f2ccd-1f9f-44bf-9bec-d62ac5c5f408
+  m_Asset: {fileID: -944628639613478452, guid: 5b54172bbb6a68907a6448302a81926e, type: 3}
+  m_ActionId: d085be83-d36a-4b45-8c32-d354f13a9863
 --- !u!1 &1927082072
 GameObject:
   m_ObjectHideFlags: 0
@@ -1486,6 +1472,20 @@ PolygonCollider2D:
       - {x: 18.942965, y: -5.75}
       - {x: -2.25, y: -5.75}
   m_UseDelaunayMesh: 1
+--- !u!114 &1964710827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: Player/Jump
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 5b54172bbb6a68907a6448302a81926e, type: 3}
+  m_ActionId: de9af52a-7b32-4a82-b4c4-5ef005c20d07
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

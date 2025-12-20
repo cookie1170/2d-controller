@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 #if COOKIE_UTILS
@@ -263,8 +262,12 @@ namespace Cookie.PlayerController
 
         protected virtual void OnEnable()
         {
-            jumpAction.action.Enable();
-            moveAction.action.Enable();
+            if (!jumpAction.action.enabled)
+                jumpAction.action.Enable();
+
+            if (!moveAction.action.enabled)
+                moveAction.action.Enable();
+
             jumpAction.action.performed += OnJump;
         }
 
