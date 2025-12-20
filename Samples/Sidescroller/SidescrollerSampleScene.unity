@@ -304,6 +304,7 @@ MonoBehaviour:
   turnaroundMult: 1.5
   airAccelMult: 0.8
   groundedThreshold: 0.4
+  ceilingThreshold: 0.8
   gravitySlipAngle: 60
 --- !u!50 &518598254
 Rigidbody2D:

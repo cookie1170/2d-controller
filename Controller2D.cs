@@ -48,11 +48,11 @@ namespace Cookie.PlayerController
         /// <param name="velocity">
         /// The velocity to move by
         /// </param>
-        protected virtual void Move(Vector2 velocity)
+        protected virtual void Move(Vector2 velocity, float? deltaTime = null)
         {
             Rigidbody2D.SlideResults results = rigidBody.Slide(
                 velocity,
-                Time.deltaTime,
+                deltaTime ?? Time.deltaTime,
                 GetSlideMovement()
             );
 
@@ -60,7 +60,7 @@ namespace Cookie.PlayerController
         }
 
         /// <summary>
-        /// Called in Awake and OnValidate, should be used for things like GetComponent calls
+        /// Called in Awake and OnValidate, should be used for things like GetComponent calls and precomputing values
         /// </summary>
         protected virtual void Init()
         {
@@ -84,13 +84,18 @@ namespace Cookie.PlayerController
 
         protected void DrawControllerInfo(IDebugUI_Builder builder)
         {
-            IDebugUI_Group foldout = builder.FoldoutGroup("Controller info");
-            foldout.Vector2Field("Velocity", () => Velocity, (newVel) => Velocity = newVel);
+            builder.Vector2Field("Velocity", () => Velocity, (newVel) => Velocity = newVel);
 
-            IDebugUI_Group lastResult = foldout.FoldoutGroup("Last result");
+            IDebugUI_Group lastResult = builder.FoldoutGroup("Last result");
             lastResult.IntField("Iterations", () => LastResult.iterationsUsed);
-            IDebugUI_If ifHit = lastResult.IfGroup(() => LastResult.surfaceHit);
-            ifHit.Vector2Field("Normal", () => LastResult.surfaceHit.normal);
+            lastResult.Vector2Field(
+                "Remaining velocity",
+                () => LastResult.remainingVelocity / Time.fixedDeltaTime
+            );
+            IDebugUI_If ifSurfaceHit = lastResult.IfGroup(() => LastResult.surfaceHit);
+            ifSurfaceHit.Vector2Field("Normal", () => LastResult.surfaceHit.normal);
+            IDebugUI_If ifSlideHit = ifSurfaceHit.ElseGroup().IfGroup(() => LastResult.slideHit);
+            ifSlideHit.Vector2Field("Normal", () => LastResult.slideHit.normal);
         }
 #endif
     }

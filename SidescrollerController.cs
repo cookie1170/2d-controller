@@ -69,16 +69,14 @@ namespace Cookie.PlayerController
         protected float airAccelMult = 0.8f;
 
         [SerializeField]
-        [Tooltip(
-            "The threshold for the collision normal to register as ground when dotted with a vector pointing up"
-        )]
-        protected float groundedThreshold = 0.2f;
+        [Tooltip("The angle threshold for the collision normal to register as ground")]
+        protected float groundedAngle = 70;
 
         [SerializeField]
         [Tooltip(
-            "The threshold for the collision normal to count as a ceiling when dotted with a vector pointing down"
+            "The angle threshold for the collision normal to count as a ceiling. Used for resetting the y velocity when hitting your head on the ceiling"
         )]
-        protected float ceilingThreshold = 0.8f;
+        protected float ceilingAngle = 40f;
 
         [SerializeField]
         [Tooltip("The angle above which movement due to gravity will slip")]
@@ -89,6 +87,8 @@ namespace Cookie.PlayerController
         protected float FallGravity;
         protected float Decel;
         protected float Accel;
+        protected float GroundedThreshold;
+        protected float CeilingThreshold;
 
         protected float TimeSinceJump = 0;
         protected float CoyoteTimer = 0;
@@ -96,6 +96,7 @@ namespace Cookie.PlayerController
 
         protected virtual void PerformJump()
         {
+            // if we don't reset the timers, you're just gonna keep jumping until they run out
             CoyoteTimer = 0;
             BufferTimer = 0;
             TimeSinceJump = 0;
@@ -107,32 +108,33 @@ namespace Cookie.PlayerController
             TimeSinceJump += Time.fixedDeltaTime;
             BufferTimer -= Time.fixedDeltaTime;
 
-            float moveDir = moveAction.action.ReadValue<float>();
-            float accel = GetAccelValue(moveDir);
-            Velocity.x = Mathf.MoveTowards(
-                Velocity.x,
-                moveDir * topSpeed,
-                accel * Time.fixedDeltaTime
-            );
-
-            if (!IsGrounded())
-            {
-                Velocity.y -= GetGravity() * Time.fixedDeltaTime;
-                CoyoteTimer -= Time.fixedDeltaTime;
-            }
-            else
+            if (IsGrounded())
             {
                 CoyoteTimer = coyoteTime;
 
                 if (Velocity.y < 0)
                     Velocity.y = 0;
             }
+            else
+            {
+                Velocity.y -= GetGravity() * Time.fixedDeltaTime;
+                CoyoteTimer -= Time.fixedDeltaTime;
+            }
 
+            //  we're checking against timers to provide some leniency to the player when walking off a platform or when jumping right before landing
             if (BufferTimer > 0 && CoyoteTimer > 0)
                 PerformJump();
 
-            // more cursed shenanigans because gravity should be a different vector to velocity
-            Move(Velocity.y < 0 ? new Vector2(Velocity.x, 0) : Velocity);
+            float moveDir = moveAction.action.ReadValue<float>();
+            float accel = GetAccelValue(moveDir);
+
+            Velocity.x = Mathf.MoveTowards(
+                Velocity.x,
+                moveDir * topSpeed,
+                accel * Time.fixedDeltaTime
+            );
+
+            Move(GetVelocityVector());
 
             /*
             we want to reset the velocity when hitting a ceiling because Rigidbody2D.Slide() doesn't modify the velocity we give it
@@ -178,7 +180,7 @@ namespace Cookie.PlayerController
             Vector2 lastNormal = LastResult.surfaceHit.normal;
             float dot = Vector2.Dot(lastNormal, Vector2.up);
 
-            return dot >= groundedThreshold;
+            return dot >= GroundedThreshold;
         }
 
         /// <summary>
@@ -188,7 +190,7 @@ namespace Cookie.PlayerController
         protected bool IsCeilingCollision()
         {
             float dot = Vector2.Dot(LastResult.slideHit.normal, Vector2.down);
-            bool isCeiling = LastResult.slideHit && dot >= ceilingThreshold;
+            bool isCeiling = LastResult.slideHit && dot >= CeilingThreshold;
             return isCeiling;
         }
 
@@ -213,7 +215,7 @@ namespace Cookie.PlayerController
         {
             return new Rigidbody2D.SlideMovement()
             {
-                gravity = Velocity.y < 0 ? new Vector2(0, Velocity.y) : Vector2.zero, // cursed shenanigans because gravity should be a separate vector
+                gravity = GetGravityVector(),
                 surfaceAnchor =
                     Mathf.Approximately(Velocity.y, 0) && IsGrounded()
                         ? Vector2.down
@@ -221,6 +223,37 @@ namespace Cookie.PlayerController
                 gravitySlipAngle = gravitySlipAngle,
                 surfaceUp = Vector2.zero, // setting surfaceUp to Vector2.zero will make sliding always occur, which lets you slide along the ceiling properly
             };
+        }
+
+        /*
+        we need this distinction because Rigidbody2D.Slide() requires them to be distinct for slipping to work properly
+        Rigidbody2D.SlideMovement.gravity is a bit of a misnomer, as it's not the gravitational acceleration,
+        rather just the movement caused by gravity
+        
+        > The reason that gravity is separated from the provided velocity
+        > is that it has a different behaviour in that it can produce slippage
+        > on surfaces where the angle is higher than Rigidbody2D.SlideMovement.gravitySlipAngle.
+        see: https://docs.unity3d.com/ScriptReference/Rigidbody2D.SlideMovement-gravity.html
+
+        NOTE: this only accounts for gravity pointing downwards, which is usually the case, but if it's not it should be modified!
+        */
+
+        /// <summary>
+        /// The velocity vector is any movement that is not due to gravity (aka not moving down)
+        /// </summary>
+        /// <returns>The velocity vector</returns>
+        protected Vector2 GetVelocityVector()
+        {
+            return Velocity.y < 0 ? new Vector2(Velocity.x, 0) : Velocity;
+        }
+
+        /// <summary>
+        /// The gravity vector is any movement due to gravity (aka moving down)
+        /// </summary>
+        /// <returns>The gravity vector</returns>
+        protected Vector2 GetGravityVector()
+        {
+            return Velocity.y < 0 ? new Vector2(0, Velocity.y) : Vector2.zero;
         }
 
         private void OnJump(InputAction.CallbackContext context)
@@ -248,6 +281,15 @@ namespace Cookie.PlayerController
             FallGravity = 2.0f * jumpHeight / (fallTime * fallTime);
             Decel = topSpeed / stopTime;
             Accel = topSpeed / accelTime;
+
+            /*
+            a dot product is equal to a product of the magnitudes times the cosine of the angle between two vectors
+            since both our Vector2.down/up vectors and the collision normal are normalized,
+            we just need to check the dot product against the cosine of the angles
+            */
+
+            GroundedThreshold = Mathf.Cos(groundedAngle * Mathf.Deg2Rad);
+            CeilingThreshold = Mathf.Cos(ceilingAngle * Mathf.Deg2Rad);
         }
 
 #if COOKIE_UTILS
