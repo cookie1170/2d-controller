@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 #if COOKIE_UTILS
 using CookieUtils.Debugging;
@@ -18,12 +19,14 @@ namespace Cookie.PlayerController
         /// <summary>
         /// The velocity with which the controller moves
         /// </summary>
-        protected Vector2 Velocity;
+        [NonSerialized]
+        public Vector2 Velocity;
 
         /// <summary>
         /// The result of the last slide
         /// </summary>
-        protected Rigidbody2D.SlideResults LastResult;
+        [NonSerialized]
+        public Rigidbody2D.SlideResults LastResult;
 
         protected virtual void Awake()
         {
@@ -93,9 +96,9 @@ namespace Cookie.PlayerController
                 () => LastResult.remainingVelocity / Time.fixedDeltaTime
             );
             IDebugUI_If ifSurfaceHit = lastResult.IfGroup(() => LastResult.surfaceHit);
-            ifSurfaceHit.Vector2Field("Normal", () => LastResult.surfaceHit.normal);
-            IDebugUI_If ifSlideHit = ifSurfaceHit.ElseGroup().IfGroup(() => LastResult.slideHit);
-            ifSlideHit.Vector2Field("Normal", () => LastResult.slideHit.normal);
+            ifSurfaceHit.Vector2Field("Surface Hit Normal", () => LastResult.surfaceHit.normal);
+            IDebugUI_If ifSlideHit = lastResult.IfGroup(() => LastResult.slideHit);
+            ifSlideHit.Vector2Field("Slide Hit Normal", () => LastResult.slideHit.normal);
         }
 #endif
     }
