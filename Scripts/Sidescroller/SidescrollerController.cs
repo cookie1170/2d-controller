@@ -136,7 +136,7 @@ namespace Cookie.PlayerController
         however, this isn't a full fix because colliding with walls and stuff still doesn't reset your velocity and you also get pushed away weirdly
         TODO: Implement a proper fix
         */
-        public void PerformCeilingCheck()
+        public virtual void PerformCeilingCheck()
         {
             if (IsCeilingCollision(out Vector2 normal, out _))
             {
@@ -167,7 +167,7 @@ namespace Cookie.PlayerController
         /// </summary>
         /// <param name="moveDir">The target move direction</param>
         /// <returns>The amount of acceleration (in meters / second²)</returns>
-        protected float GetAccelValue(float moveDir)
+        protected virtual float GetAccelValue(float moveDir)
         {
             float airMult = IsGrounded() ? 1 : airAccelMult;
 
@@ -213,7 +213,7 @@ namespace Cookie.PlayerController
         /// The velocity vector is any movement that is not due to gravity (aka not moving down)
         /// </summary>
         /// <returns>The velocity vector</returns>
-        protected Vector2 GetVelocityVector()
+        protected virtual Vector2 GetVelocityVector()
         {
             return Velocity.y < 0 ? new Vector2(Velocity.x, 0) : Velocity;
         }
@@ -222,14 +222,9 @@ namespace Cookie.PlayerController
         /// The gravity vector is any movement due to gravity (aka moving down)
         /// </summary>
         /// <returns>The gravity vector</returns>
-        protected Vector2 GetGravityVector()
+        protected virtual Vector2 GetGravityVector()
         {
             return Velocity.y < 0 ? new Vector2(0, Velocity.y) : Vector2.zero;
-        }
-
-        private void OnJump(InputAction.CallbackContext context)
-        {
-            BufferTimer = jumpBuffer;
         }
 
         /// <summary>
@@ -258,14 +253,6 @@ namespace Cookie.PlayerController
         }
 
         /// <summary>
-        /// Applies gravity to the controller
-        /// </summary>
-        public virtual void ApplyGravity()
-        {
-            Velocity.y -= GetGravity() * Time.fixedDeltaTime;
-        }
-
-        /// <summary>
         /// Casts a ray straight downwards and snaps the controller to the hit position
         /// </summary>
         public virtual void SnapToGround()
@@ -280,19 +267,10 @@ namespace Cookie.PlayerController
         }
 
         /// <summary>
-        /// Gets the gravity acceleration that should be used, taking into account variable jump height and different gravity for falling and jumping
-        /// </summary>
-        /// <returns>The gravity acceleration (in meters / second²)</returns>
-        protected float GetGravity()
-        {
-            return state.GetGravity();
-        }
-
-        /// <summary>
         /// Checks whether the controller is grounded based on the collision normal
         /// </summary>
         /// <returns>True if the controller is grounded</returns>
-        public bool IsGrounded()
+        public virtual bool IsGrounded()
         {
             if (!LastResult.surfaceHit)
                 return false;
@@ -307,7 +285,7 @@ namespace Cookie.PlayerController
         /// Checks whether the last collision was against a ceiling
         /// </summary>
         /// <returns>True if the collision normal is almost pointing down</returns>
-        public bool IsCeilingCollision(out Vector2 normal, out float dot)
+        public virtual bool IsCeilingCollision(out Vector2 normal, out float dot)
         {
             return IsCeilingHit(LastResult.slideHit, out normal, out dot);
         }
@@ -317,7 +295,7 @@ namespace Cookie.PlayerController
         /// </summary>
         /// <param name="hit">The hit to check</param>
         /// <returns>True if it's a ceiling hit</returns>
-        private bool IsCeilingHit(RaycastHit2D hit, out Vector2 normal, out float dot)
+        protected virtual bool IsCeilingHit(RaycastHit2D hit, out Vector2 normal, out float dot)
         {
             normal = Vector2.zero;
             dot = -1f;
@@ -334,7 +312,7 @@ namespace Cookie.PlayerController
         /// <summary>
         /// Performs a check against <c>BufferTimer</c> and <c>CoyoteTimer</c> and changes the state to <c>jumping</c> if they're both active
         /// </summary>
-        public bool PerformJumpCheck()
+        public virtual bool PerformJumpCheck()
         {
             if (BufferTimer > 0 && CoyoteTimer > 0)
             {
@@ -343,6 +321,31 @@ namespace Cookie.PlayerController
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the gravity acceleration that should be used, taking into account variable jump height and different gravity for falling and jumping
+        /// </summary>
+        /// <returns>The gravity acceleration (in meters / second²)</returns>
+        protected virtual float GetGravity()
+        {
+            return state.GetGravity();
+        }
+
+        /// <summary>
+        /// Applies gravity to the controller
+        /// </summary>
+        public virtual void ApplyGravity()
+        {
+            Velocity.y -= GetGravity() * Time.fixedDeltaTime;
+        }
+
+        /// <summary>
+        /// Called when jump is pressed
+        /// </summary>
+        protected virtual void OnJump(InputAction.CallbackContext context)
+        {
+            BufferTimer = jumpBuffer;
         }
 
         protected override void Awake()
@@ -370,9 +373,9 @@ namespace Cookie.PlayerController
             Accel = topSpeed / accelTime;
 
             /*
-            a dot product is equal to a product of the magnitudes times the cosine of the angle between two vectors
+            a dot product is equal to a product of the magnitudes times the cos of the angle between two vectors
             since both our Vector2.down/up vectors and the collision normal are normalized,
-            we just need to check the dot product against the cosine of the angles
+            we just need to check the dot product against the cos of the angles
             */
 
             GroundedThreshold = Mathf.Cos(groundedAngle * Mathf.Deg2Rad);

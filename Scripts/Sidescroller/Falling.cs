@@ -12,10 +12,16 @@ namespace Cookie.PlayerController
         public override void OnEnter(SidescrollerState prev, object[] extraParams)
         {
             HangTimer = 0;
-            if (extraParams.Length > 0 && extraParams[0] is bool isApex && isApex)
+
+            if (extraParams.Length >= 1 && extraParams[0] is bool isApex && isApex)
             {
                 HangTimer = Host.hangTime;
                 Host.Velocity.x *= Host.jumpApexSpeedUp;
+            }
+
+            if (extraParams.Length >= 2 && extraParams[1] is bool jumpCut && jumpCut)
+            {
+                Host.Velocity.y -= Host.jumpReleaseImpulse;
             }
         }
 

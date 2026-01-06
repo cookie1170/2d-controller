@@ -24,8 +24,7 @@ namespace Cookie.PlayerController
 
             if (Host.TimeSinceJump >= Host.minJumpDuration && !Host.jumpAction.action.IsPressed())
             {
-                Host.Velocity.y -= Host.jumpReleaseImpulse;
-                return Host.Falling;
+                return new(Host.Falling, false, true);
             }
 
             if (Host.IsGrounded())
@@ -48,7 +47,7 @@ namespace Cookie.PlayerController
         )
         {
             movement.surfaceAnchor = Vector2.zero;
-            // setting surfaceUp to Vector2.zero will make sliding always occur, which lets you slide along the ceiling properly
+            // setting surfaceUp to Vector2.zero will make sliding always occur, which lets you slide along the walls properly
             movement.surfaceUp = Vector2.zero;
             return movement;
         }
